@@ -4,17 +4,32 @@ import 'package:provider/provider.dart';
 
 import 'application/agent/agent_controller.dart';
 import 'presentation/app.dart';
+import 'infrastructure/db/app_database.dart';
+import 'infrastructure/llm/free_llm_client.dart';
+import 'infrastructure/recipe/free_recipe_api_client.dart';
+import 'infrastructure/repositories/recipe_repository_impl.dart';
+import 'infrastructure/repositories/session_repository_impl.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // NOTE: Real initialization (DB, notifications, voice, etc.) is done
-  // inside AgentController bootstrap to keep main.dart minimal.
+  final db = await AppDatabase.open();
+  final llmClient = FreeLlmClient('https://api.example.com/llm');
+  final recipeApiClient = FreeRecipeApiClient('https://api.example.com/recipes');
+  final recipeRepository = RecipeRepositoryImpl(recipeApiClient, db);
+  final sessionRepository = SessionRepositoryImpl(db, AppDatabase.encryptionService);
+
+  final agentController = AgentController(
+    llmClient: llmClient,
+    recipeRepository: recipeRepository,
+    sessionRepository: sessionRepository,
+  );
+
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(
-          create: (_) => AgentController()..bootstrap(),
+          create: (_) => agentController..bootstrap(),
         ),
       ],
       child: const AiChefApp(),

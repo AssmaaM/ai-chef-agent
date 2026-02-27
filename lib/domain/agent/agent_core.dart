@@ -65,8 +65,8 @@ class AgentCore {
         return _onFinished(event);
       case AgentStateId.error:
         return _onError(event);
-      
-
+      case AgentStateId.awaitingConfirmation:
+        return _onAwaitingConfirmation(event);
     }
   }
 
@@ -304,18 +304,45 @@ class AgentCore {
           ],
         );
       case AgentEventType.userConfirmedOrderingAssistance:
-        // The actual deep link / API call is done by infra AFTER capability checks.
+        // Move to awaitingConfirmation for security/manual gating.
         return AgentTransitionResult(
-          nextState: AgentStateId.orderingIngredients,
-          nextContext: context,
+          nextState: AgentStateId.awaitingConfirmation,
+          nextContext: context.copyWith(
+            pendingAction: const AgentAction(type: AgentActionType.assistOpeningGroceryApp),
+          ),
           actions: const [
-            AgentAction(type: AgentActionType.assistOpeningGroceryApp),
+            AgentAction(
+              type: AgentActionType.sendChatMessage,
+              payload: {'message': 'Are you sure you want to open the grocery app?'},
+            ),
           ],
         );
       case AgentEventType.userDeclinedOrderingAssistance:
         return AgentTransitionResult(
           nextState: AgentStateId.idle,
           nextContext: context.clearSession(),
+        );
+      default:
+        return AgentTransitionResult(nextState: state, nextContext: context);
+    }
+  }
+
+  AgentTransitionResult _onAwaitingConfirmation(AgentEvent event) {
+    final pendingAction = context.pendingAction;
+    if (pendingAction == null) return _error("No pending action in awaitingConfirmation");
+
+    switch (event.type) {
+      case AgentEventType.userConfirmedAction:
+        // Execute the pending action.
+        return AgentTransitionResult(
+          nextState: AgentStateId.idle, // Or return to a sensible state
+          nextContext: context.clearPendingAction(),
+          actions: [pendingAction],
+        );
+      case AgentEventType.userCancelledAction:
+        return AgentTransitionResult(
+          nextState: AgentStateId.idle,
+          nextContext: context.clearPendingAction(),
         );
       default:
         return AgentTransitionResult(nextState: state, nextContext: context);
