@@ -12,5 +12,6 @@ enum AgentStateId {
   timerRunning,
   finished,
   error,
+  awaitingConfirmation,
 }
 

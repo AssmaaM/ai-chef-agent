@@ -46,6 +46,10 @@ enum AgentEventType {
   substitutionsSuggested,
   substitutionsFailed,
   errorOccurred,
+
+  // Confirmation flow
+  userConfirmedAction,
+  userCancelledAction,
 }
 
 class AgentEvent {

@@ -12,16 +12,28 @@ class FreeLlmClient implements LlmClient {
     required String userQuery,
     required Map<String, Object?> constraints,
   }) async {
-    final res = await http.post(
-      Uri.parse(endpoint),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'query': userQuery,
-        'constraints': constraints,
-      }),
-    );
+    int retries = 3;
+    while (retries > 0) {
+      try {
+        final res = await http.post(
+          Uri.parse(endpoint),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'query': userQuery,
+            'constraints': constraints,
+          }),
+        ).timeout(const Duration(seconds: 10));
 
-    return jsonDecode(res.body);
+        if (res.statusCode == 200) {
+          return jsonDecode(res.body);
+        }
+      } catch (e) {
+        if (retries == 1) rethrow;
+      }
+      retries--;
+      await Future.delayed(const Duration(seconds: 1));
+    }
+    throw Exception('Failed to suggest recipes after retries');
   }
 
   @override

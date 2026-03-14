@@ -1,4 +1,5 @@
 //C:\Users\assma\OneDrive\Bureau\ai_chef_agent\lib\domain\agent\agent_context.dart
+import 'agent_action.dart';
 import '../models/cooking_session.dart';
 import '../models/recipe.dart';
 import '../models/user_preferences.dart';
@@ -13,6 +14,7 @@ class AgentContext {
   final Recipe? selectedRecipe;
   final CookingSession? activeSession;
   final int? ingredientCheckIndex;
+  final AgentAction? pendingAction;
 
   const AgentContext({
     this.preferences,
@@ -20,6 +22,7 @@ class AgentContext {
     this.selectedRecipe,
     this.activeSession,
     this.ingredientCheckIndex,
+    this.pendingAction,
   });
 
   AgentContext copyWith({
@@ -28,6 +31,7 @@ class AgentContext {
     Recipe? selectedRecipe,
     CookingSession? activeSession,
     int? ingredientCheckIndex,
+    AgentAction? pendingAction,
   }) {
     return AgentContext(
       preferences: preferences ?? this.preferences,
@@ -35,12 +39,24 @@ class AgentContext {
       selectedRecipe: selectedRecipe ?? this.selectedRecipe,
       activeSession: activeSession ?? this.activeSession,
       ingredientCheckIndex: ingredientCheckIndex ?? this.ingredientCheckIndex,
+      pendingAction: pendingAction ?? this.pendingAction,
     );
   }
 
   AgentContext clearSession() {
     return AgentContext(
       preferences: preferences,
+    );
+  }
+
+  AgentContext clearPendingAction() {
+    return AgentContext(
+      preferences: preferences,
+      suggestedRecipes: suggestedRecipes,
+      selectedRecipe: selectedRecipe,
+      activeSession: activeSession,
+      ingredientCheckIndex: ingredientCheckIndex,
+      pendingAction: null,
     );
   }
 }

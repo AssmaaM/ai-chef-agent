@@ -1,6 +1,8 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import '../security/encryption_service.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 /// SQLite database bootstrap.
 ///
@@ -8,6 +10,12 @@ import 'package:path_provider/path_provider.dart';
 /// you would add migrations, indices, and proper encryption.
 class AppDatabase {
   static Database? _db;
+  static EncryptionService? _encryptionService;
+
+  static EncryptionService get encryptionService {
+    _encryptionService ??= EncryptionService(const FlutterSecureStorage());
+    return _encryptionService!;
+  }
 
   static Future<Database> open() async {
     if (_db != null) return _db!;
